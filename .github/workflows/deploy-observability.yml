@@ -1,0 +1,29 @@
+name: Deploy Observability Stack
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, debian-ci-final]
+
+    steps:
+    - name: Fix Permissions
+      run: |
+        sudo chown -R $(whoami):$(whoami) "${{ github.workspace }}" || true
+        sudo chmod -R 755 "${{ github.workspace }}" || true
+
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Stop Old Containers
+      run: sudo docker-compose -f docker-compose.observability.yml down || true
+
+    - name: Deploy Observability Stack
+      run: sudo docker-compose -f docker-compose.observability.yml up -d
+
+    - name: Check Status
+      run: sudo docker-compose -f docker-compose.observability.yml ps
